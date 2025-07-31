@@ -46,7 +46,7 @@ def get_path_to_file_based_on_parent_directory(parent_directory: str, target_fil
 
 @mcp.tool()
 def ingest_documents(file_paths: List[str]) -> str:
-    """
+    r"""
     Ingests documents from given file paths into a vector database for RAG capabilities.
     
     This tool performs the complete RAG ingestion pipeline:
@@ -54,6 +54,11 @@ def ingest_documents(file_paths: List[str]) -> str:
     2. Chunks text at sentence level for optimal context
     3. Generates embeddings using OpenAI's CLIP model (local, no API key required)
     4. Stores vectors in ChromaDB with 20-minute persistence
+
+    IMPORTANT - Windows Path Format:
+        Windows directory paths MUST use double backslashes (\\) to avoid escape character issues.
+        Correct: "C:\\Users\\John\\Desktop" or "D:\\Projects"
+        Incorrect: "C:\Users\John\Desktop" (may cause search to fail)
     
     Args:
         file_paths: List of file paths to ingest (e.g., ["C:\\path\\to\\file1.txt", "C:\\path\\to\\file2.md"])
