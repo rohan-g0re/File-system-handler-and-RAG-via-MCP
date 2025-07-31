@@ -1,8 +1,10 @@
 from typing import Any, List
 import httpx
+import json
 from mcp.server.fastmcp import FastMCP
 from tool_helpers.file_search_helpers import file_search_helper
 from tool_helpers.rag_ingest_helpers import ingest_documents_pipeline
+from tool_helpers.rag_retrieval_helpers import retrieve_documents_pipeline
 
 
 mcp = FastMCP()
@@ -85,6 +87,65 @@ def ingest_documents(file_paths: List[str]) -> str:
             
     except Exception as e:
         return f"❌ Error during document ingestion: {str(e)}"
+
+
+@mcp.tool()
+def retrieve_relevant_chunks(user_question: str, top_k: int = 5) -> str:
+    """
+    Retrieves the most relevant document chunks for answering a user question using RAG.
+    
+    This tool performs semantic search on the ingested document chunks:
+    1. Vectorizes the user question using the same CLIP model as ingestion
+    2. Calculates cosine similarity with all stored chunk embeddings
+    3. Returns the top-k most relevant chunks with similarity scores
+    4. Ensures unique chunks (no duplicates) in results
+    
+    Args:
+        user_question: The user's question/query to find relevant information for
+        top_k: Number of most relevant chunks to retrieve (default: 5, max recommended: 10)
+    
+    Returns:
+        str: JSON-formatted string containing relevant chunks with metadata and similarity scores
+    
+    Example:
+        user_question: "What is machine learning?"
+        top_k: 3
+        Returns: JSON with 3 most relevant chunks, their text content, similarity scores, and source file info
+    """
+    
+    try:
+        if not user_question or not user_question.strip():
+            return "❌ Error: No user question provided for retrieval"
+        
+        # Run the retrieval pipeline
+        result = retrieve_documents_pipeline(user_question.strip(), top_k)
+        
+        if result['status'] == 'success':
+            # Format response with rich information
+            chunks_info = []
+            for chunk in result['retrieved_chunks']:
+                chunk_info = {
+                    "chunk_text": chunk["chunk_text"],
+                    # "similarity_score": round(chunk["similarity_score"], 4),
+                    # "source_file": chunk["metadata"]["filename"],
+                    "file_path": chunk["metadata"]["file_path"],
+                    # "chunk_index": chunk["metadata"]["chunk_index"]
+                }
+                chunks_info.append(chunk_info)
+            
+            response_data = {
+                "query": result["query"],
+                "total_chunks_searched": result["total_chunks_searched"],
+                "retrieved_count": result["retrieved_count"],
+                "relevant_chunks": chunks_info
+            }
+            
+            return f"✅ Retrieved {result['retrieved_count']} relevant chunks from vector database:\n\n{json.dumps(response_data, indent=2, ensure_ascii=False)}"
+        else:
+            return f"❌ Retrieval failed: {result['message']}"
+            
+    except Exception as e:
+        return f"❌ Error during chunk retrieval: {str(e)}"
 
 
 if __name__ == "__main__":

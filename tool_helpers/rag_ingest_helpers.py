@@ -24,7 +24,7 @@ except LookupError:
 # Global ChromaDB client and collection
 CHROMA_CLIENT = None
 CHROMA_COLLECTION = None
-DB_EXPIRY_TIME = None
+DB_EXPIRY_TIME = 100 
 DB_PERSIST_PATH = "./chroma_db"
 
 # Global CLIP model (initialized lazily)
