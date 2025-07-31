@@ -1,8 +1,8 @@
 from typing import Any, List
 import httpx
 from mcp.server.fastmcp import FastMCP
-from file_search_helpers import file_search_helper
-from rag_helpers import ingest_documents_pipeline
+from tool_helpers.file_search_helpers import file_search_helper
+from tool_helpers.rag_ingest_helpers import ingest_documents_pipeline
 
 
 mcp = FastMCP()

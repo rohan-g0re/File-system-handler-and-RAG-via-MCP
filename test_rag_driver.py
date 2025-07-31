@@ -5,7 +5,7 @@ Test driver for RAG helper functions with recursive testing
 
 import os
 import tempfile
-from rag_helpers import (
+from tool_helpers.rag_ingest_helpers import (
     extract_text, 
     find_and_scan, 
     chunk_and_vectorize, 
