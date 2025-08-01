@@ -10,6 +10,13 @@ from datetime import datetime, timedelta
 import nltk
 from nltk.tokenize import sent_tokenize
 
+# PDF support
+try:
+    from PyPDF2 import PdfReader
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
+
 # Download required NLTK data (only if not already present)
 try:
     nltk.data.find('tokenizers/punkt')
@@ -78,8 +85,35 @@ def init_chroma_db():
     
     return CHROMA_COLLECTION
 
+def extract_text_from_pdf(file_path: str) -> str:
+    """Extract text from PDF file using PyPDF2"""
+    if not PDF_AVAILABLE:
+        return "Error: PyPDF2 not installed. Please install with: uv add pypdf2"
+    
+    try:
+        reader = PdfReader(file_path)
+        text_content = []
+        
+        for page_num, page in enumerate(reader.pages):
+            try:
+                page_text = page.extract_text()
+                if page_text.strip():  # Only add non-empty pages
+                    text_content.append(page_text.strip())
+            except Exception as e:
+                print(f"Warning: Error extracting text from page {page_num + 1} of {file_path}: {str(e)}")
+                continue
+        
+        if not text_content:
+            return f"Error: No readable text found in PDF {file_path}"
+        
+        # Join all pages with double newline for better separation
+        return "\n\n".join(text_content)
+        
+    except Exception as e:
+        return f"Error reading PDF {file_path}: {str(e)}"
+
 def extract_text(file_path: str) -> str:
-    """Extract text from file based on format (.txt, .md)"""
+    """Extract text from file based on format (.txt, .md, .pdf)"""
     try:
         if not os.path.exists(file_path):
             return f"Error: File {file_path} not found"
@@ -90,8 +124,10 @@ def extract_text(file_path: str) -> str:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
                 content = file.read()
                 return content.strip()
+        elif file_ext == '.pdf':
+            return extract_text_from_pdf(file_path)
         else:
-            return f"Unsupported file format: {file_ext}"
+            return f"Unsupported file format: {file_ext}. Supported formats: .txt, .md, .pdf"
             
     except Exception as e:
         return f"Error reading file {file_path}: {str(e)}"
