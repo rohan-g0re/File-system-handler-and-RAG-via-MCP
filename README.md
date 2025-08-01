@@ -75,7 +75,7 @@ uv add "mcp[cli]" httpx chromadb open-clip-torch torch torchvision nltk Pillow
 
 - ✅ **text files** (.txt)
 - ✅ **markdown** (.md)  
-- ⏳ *PDF functionality coming soon*
+- ⏳ **PDF functionality --> OUT NOW!**
 
 <br>
 
